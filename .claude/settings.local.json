@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(test:*)",
+      "Bash(cmd.exe /c \"mkdir \"\"c:\\\\Game Cards\\\\Tractor Spare Part\"\" 2>nul & cd /d \"\"c:\\\\Game Cards\\\\Tractor Spare Part\"\" & mkdir frontend backend shared & dir /b\")",
+      "Bash(cmd.exe /c \"dir \"\"c:\\\\Game Cards\\\\Tractor Spare Part\"\" /b\")",
+      "Bash(echo:*)",
+      "Bash(command ls -la)",
+      "Bash(dir)",
+      "Bash(cmd /c \"cd /d c:\\\\ && dir Game* /s /b 2>nul | head -5\")",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Game Cards\\\\Tractor Spare Part''; New-Item -ItemType Directory -Force -Path ''frontend'',''backend'',''shared''; Get-ChildItem\")",
+      "Bash(powershell -Command \"\n$projectRoot = ''C:\\\\Game Cards\\\\Tractor Spare Part''\n\n# Frontend structure\n$frontendPaths = @\\(\n    ''frontend/src/app'',\n    ''frontend/src/app/api'',\n    ''frontend/src/components'',\n    ''frontend/src/components/common'',\n    ''frontend/src/components/layout'',\n    ''frontend/src/components/product'',\n    ''frontend/src/components/cart'',\n    ''frontend/src/components/auth'',\n    ''frontend/src/lib'',\n    ''frontend/src/hooks'',\n    ''frontend/src/types'',\n    ''frontend/src/contexts'',\n    ''frontend/src/config'',\n    ''frontend/src/utils'',\n    ''frontend/public/images'',\n    ''frontend/public/icons''\n\\)\n\n# Backend structure\n$backendPaths = @\\(\n    ''backend/src'',\n    ''backend/src/controllers'',\n    ''backend/src/services'',\n    ''backend/src/models'',\n    ''backend/src/middleware'',\n    ''backend/src/routes'',\n    ''backend/src/utils'',\n    ''backend/src/config'',\n    ''backend/src/validators'',\n    ''backend/src/types'',\n    ''backend/prisma'',\n    ''backend/logs'',\n    ''backend/uploads''\n\\)\n\n# Shared structure\n$sharedPaths = @\\(\n    ''shared/types'',\n    ''shared/constants'',\n    ''shared/validators''\n\\)\n\nforeach \\($path in $frontendPaths\\) {\n    New-Item -ItemType Directory -Force -Path \\(Join-Path $projectRoot $path\\) | Out-Null\n}\n\nforeach \\($path in $backendPaths\\) {\n    New-Item -ItemType Directory -Force -Path \\(Join-Path $projectRoot $path\\) | Out-Null\n}\n\nforeach \\($path in $sharedPaths\\) {\n    New-Item -ItemType Directory -Force -Path \\(Join-Path $projectRoot $path\\) | Out-Null\n}\n\nWrite-Host ''Directory structure created successfully''\n\")"
+    ]
+  }
+}

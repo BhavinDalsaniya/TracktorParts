@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+/frontend/.next/
+/frontend/out/
+/frontend/build/
+/backend/dist/
+
+# Environment files
+.env
+.env*.local
+.env.production
+
+# Logs
+/backend/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Uploads
+/backend/uploads/*
+!/backend/uploads/.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Prisma
+/backend/prisma/migrations/
+
+# Build artifacts
+*.tsbuildinfo
+next-env.d.ts
