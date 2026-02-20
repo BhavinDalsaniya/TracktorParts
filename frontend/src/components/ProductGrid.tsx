@@ -17,9 +17,9 @@ export function ProductGrid({ products }: ProductGridProps) {
 
   if (products.length === 0) {
     return (
-      <div className="grid grid-cols-2 gap-3">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="skeleton h-64 rounded-2xl" />
+      <div className="grid grid-cols-4 gap-1.5">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div key={i} className="skeleton h-20 rounded-lg" />
         ))}
       </div>
     );
@@ -31,7 +31,7 @@ export function ProductGrid({ products }: ProductGridProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-4 gap-1.5">
       {products.map((product) => {
         const priceNum = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
         const compareAtPriceNum = product.compareAtPrice
@@ -49,7 +49,7 @@ export function ProductGrid({ products }: ProductGridProps) {
           <Link
             key={product.id}
             href={`/products/${product.slug}`}
-            className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm smooth-transition active:scale-[0.98]"
+            className="group flex flex-col overflow-hidden rounded-lg bg-white shadow-sm smooth-transition active:scale-[0.98]"
           >
             {/* Image */}
             <div className="relative aspect-square overflow-hidden bg-gray-100">
@@ -58,58 +58,44 @@ export function ProductGrid({ products }: ProductGridProps) {
                   src={product.images[0]}
                   alt={product.nameGu}
                   fill
-                  sizes="(max-width: 360px) 50vw, 180px"
+                  sizes="(max-width: 360px) 25vw, 90px"
                   className="object-cover"
                   loading="lazy"
                 />
               )}
 
               {/* Badge */}
-              <div className="absolute left-2 top-2 flex flex-col gap-1">
-                {hasDiscount && (
-                  <span className="rounded-lg bg-accent-500 px-2 py-1 text-xs font-bold text-white">
-                    {discountPercentage}% {gu.off}
-                  </span>
-                )}
-                {!product.isActive && (
-                  <span className="rounded-lg bg-gray-500 px-2 py-1 text-xs font-bold text-white">
-                    {gu.outOfStock}
-                  </span>
-                )}
-              </div>
+              {hasDiscount && (
+                <span className="absolute left-0.5 top-0.5 rounded bg-accent-500 px-0.5 py-0.5 text-[8px] font-bold text-white">
+                  {discountPercentage}%
+                </span>
+              )}
             </div>
 
             {/* Details */}
-            <div className="flex flex-1 flex-col p-3">
-              <h3 className="flex-1 text-base font-semibold text-gray-900 line-clamp-2">
+            <div className="flex flex-1 flex-col p-1">
+              <h3 className="flex-1 text-[10px] font-medium text-gray-900 line-clamp-1 leading-tight">
                 {product.nameGu || product.name}
               </h3>
 
-              <div className="mt-2 flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-bold text-primary-600">
-                    {formatPrice(product.price)}
-                  </p>
-                  {hasDiscount && (
-                    <p className="text-sm text-gray-400 line-through">
-                      {formatPrice(product.compareAtPrice!)}
-                    </p>
-                  )}
-                </div>
+              <div className="mt-0.5 flex items-center justify-between gap-0.5">
+                <p className="text-[10px] font-bold text-primary-600">
+                  {formatPrice(product.price)}
+                </p>
 
                 <button
                   onClick={(e) => handleAddToCart(e, product)}
-                  disabled={!product.isActive || product.stock <= 0}
+                  disabled={product.isActive === false || product.stock <= 0}
                   className={cn(
-                    'flex h-11 w-11 touch-target items-center justify-center rounded-xl',
+                    'flex h-5 w-5 touch-target items-center justify-center',
                     'active:scale-95 smooth-transition',
-                    product.isActive && product.stock > 0
+                    product.isActive !== false && product.stock > 0
                       ? 'bg-primary-500 text-white active:bg-primary-600'
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   )}
                   aria-label="Add to cart"
                 >
-                  <ShoppingCart className="h-5 w-5" />
+                  <ShoppingCart className="h-2.5 w-2.5" />
                 </button>
               </div>
             </div>

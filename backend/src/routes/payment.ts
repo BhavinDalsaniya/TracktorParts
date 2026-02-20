@@ -28,9 +28,210 @@ const verifyPaymentSchema = z.object({
   razorpay_signature: z.string().min(1),
 });
 
+const guestOrderSchema = z.object({
+  items: z.array(z.object({
+    productId: z.string(),
+    quantity: z.number(),
+    product: z.object({
+      id: z.string(),
+      name: z.string(),
+      nameGu: z.string(),
+      price: z.union([z.string(), z.number()]),
+      stock: z.number(),
+    }),
+  })),
+  subtotal: z.number(),
+  shipping: z.number(),
+  tax: z.number(),
+  total: z.number(),
+  customerDetails: z.object({
+    fullName: z.string(),
+    email: z.string().optional(),
+    mobileNumber: z.string(),
+    address: z.string(),
+    state: z.string(),
+    district: z.string(),
+    pincode: z.string(),
+  }),
+  paymentMethod: z.string().default('online'),
+});
+
+const guestPaymentOrderSchema = z.object({
+  orderId: z.string(),
+  amount: z.number(),
+  customerDetails: z.object({
+    fullName: z.string(),
+    email: z.string().optional(),
+    mobileNumber: z.string(),
+  }),
+});
+
 // ============================================
 // PUBLIC ENDPOINTS
 // ============================================
+
+/**
+ * @route   POST /api/payment/guest-order
+ * @desc    Create guest order (no login required)
+ * @access  Public
+ */
+router.post(
+  '/guest-order',
+  asyncHandler(async (req, res) => {
+    const data = guestOrderSchema.parse(req.body);
+
+    // Verify stock
+    for (const item of data.items) {
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+        select: { stock: true, name: true },
+      });
+
+      if (!product) {
+        throw new ApiError(404, `પ્રોડક્ટ મળ્યું નથી: ${item.product.name}`);
+      }
+      if (product.stock < item.quantity) {
+        throw new ApiError(400, `${item.product.name} સ્ટોકમાં ઉપલબ્ધ નથી`);
+      }
+    }
+
+    // Generate order number
+    const orderCount = await prisma.order.count();
+    const orderNumber = `ORD-${new Date().getFullYear()}-${String(orderCount + 1).padStart(6, '0')}`;
+
+    // Create guest order
+    const order = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
+        data: {
+          orderNumber,
+          subtotal: data.subtotal,
+          shipping: data.shipping,
+          tax: data.tax,
+          discount: 0,
+          total: data.total,
+          paymentMethod: data.paymentMethod === 'online' ? ('ONLINE_PAYMENT' as const) : ('COD' as const),
+          paymentStatus: 'PENDING',
+          status: 'PENDING',
+          shippingAddress: {
+            fullName: data.customerDetails.fullName,
+            phone: data.customerDetails.mobileNumber,
+            email: data.customerDetails.email || '',
+            addressLine1: data.customerDetails.address,
+            city: data.customerDetails.district,
+            district: data.customerDetails.district,
+            state: data.customerDetails.state,
+            pincode: data.customerDetails.pincode,
+          },
+          items: {
+            create: data.items.map((item) => {
+              const price = typeof item.product.price === 'string'
+                ? parseFloat(item.product.price)
+                : item.product.price;
+              return {
+                productId: item.productId,
+                productName: item.product.name,
+                productNameGu: item.product.nameGu,
+                sku: item.product.id,
+                image: '',
+                quantity: item.quantity,
+                unitPrice: price,
+                tax: Math.round((price * item.quantity * 18) / 100),
+                discount: 0,
+                total: price * item.quantity,
+              };
+            }),
+          },
+        },
+        select: { id: true, orderNumber: true, total: true },
+      });
+
+      // Deduct inventory
+      for (const item of data.items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stock: true },
+        });
+
+        if (product && product.stock >= item.quantity) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: { decrement: item.quantity },
+              soldCount: { increment: item.quantity },
+            },
+          });
+
+          // Log inventory
+          await tx.inventoryLog.create({
+            data: {
+              productId: item.productId,
+              type: 'SALE',
+              quantity: -item.quantity,
+              stockBefore: product.stock,
+              stockAfter: product.stock - item.quantity,
+              referenceId: order.id,
+              referenceType: 'ORDER',
+            },
+          });
+        }
+      }
+
+      return order;
+    });
+
+    logger.info(`Guest order created: ${orderNumber}`);
+
+    res.json({
+      success: true,
+      data: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        total: Number(order.total),
+      },
+    });
+  })
+);
+
+/**
+ * @route   POST /api/payment/create-order-guest
+ * @desc    Create Razorpay order for guest checkout
+ * @access  Public
+ */
+router.post(
+  '/create-order-guest',
+  asyncHandler(async (req, res) => {
+    const data = guestPaymentOrderSchema.parse(req.body);
+
+    if (!razorpayService.isEnabled()) {
+      throw new ApiError(400, 'ઓનલાઇન ચુકવણી હમણારું ઉપલબ્ધ નથી');
+    }
+
+    // Create Razorpay order
+    const paymentOrder = await createPaymentOrder(
+      data.orderId,
+      data.amount,
+      {
+        name: data.customerDetails.fullName,
+        phone: data.customerDetails.mobileNumber,
+        email: data.customerDetails.email,
+      }
+    );
+
+    if (!paymentOrder.razorpayOrder) {
+      throw new ApiError(500, 'પેમેન્ટ ઓર્ડર બનાવવામાં નિષ્ફળ');
+    }
+
+    res.json({
+      success: true,
+      data: {
+        orderId: data.orderId,
+        razorpayOrderId: paymentOrder.razorpayOrder.id,
+        amountInPaisa: paymentOrder.amountInPaisa,
+        keyId: paymentOrder.keyId,
+      },
+    });
+  })
+);
 
 /**
  * @route   GET /api/payment/methods

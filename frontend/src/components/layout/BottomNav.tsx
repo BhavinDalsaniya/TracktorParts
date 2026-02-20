@@ -4,10 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
-  Grid2x2,
   ShoppingCart,
-  Receipt,
-  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { gu } from '@/config/constants';
@@ -20,10 +17,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/', icon: Home, label: gu.home },
-  { href: '/categories', icon: Grid2x2, label: gu.categories },
   { href: '/cart', icon: ShoppingCart, label: gu.cart },
-  { href: '/orders', icon: Receipt, label: gu.orders },
-  { href: '/account', icon: User, label: gu.account },
 ];
 
 export function BottomNav() {
