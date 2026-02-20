@@ -43,7 +43,7 @@ const updateProductSchema = createProductSchema.partial();
 
 const listProductsSchema = z.object({
   page: z.string().optional().transform((v) => parseInt(v || '1') || 1),
-  limit: z.string().optional().transform((v) => Math.min(parseInt(v || '12') || 12, 50)), // Max 50
+  limit: z.string().optional().transform((v) => Math.min(parseInt(v || '1000') || 1000, 10000)), // Max 10000 for homepage
   categoryId: z.string().optional(),
   search: z.string().optional(),
   tractorModelId: z.string().optional(),

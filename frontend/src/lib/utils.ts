@@ -14,13 +14,14 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format price in INR
  */
-export function formatPrice(price: number): string {
+export function formatPrice(price: number | string): string {
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
   return new Intl.NumberFormat('gu-IN', {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(numPrice);
 }
 
 /**

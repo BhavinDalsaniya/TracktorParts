@@ -8,21 +8,26 @@ export interface Product {
   name: string;
   nameGu: string;
   slug: string;
-  description: string;
-  descriptionGu: string;
-  price: number;
-  compareAtPrice?: number;
-  sku: string;
+  description?: string;
+  descriptionGu?: string;
+  price: number | string;
+  compareAtPrice?: number | string | null;
+  sku?: string;
   stock: number;
   images: string[];
-  categoryId: string;
-  category: Category;
-  compatibility: string[];
+  thumbnail?: string | null;
+  categoryId?: string;
+  category?: Category;
+  averageRating?: number | string;
+  reviewCount?: number;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  compatibility?: any[];
   specifications?: Record<string, string | number>;
   weight?: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Category {

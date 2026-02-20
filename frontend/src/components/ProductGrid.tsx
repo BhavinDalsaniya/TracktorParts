@@ -33,13 +33,15 @@ export function ProductGrid({ products }: ProductGridProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       {products.map((product) => {
-        const hasDiscount =
-          product.compareAtPrice && product.compareAtPrice > product.price;
+        const priceNum = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+        const compareAtPriceNum = product.compareAtPrice
+          ? (typeof product.compareAtPrice === 'string' ? parseFloat(product.compareAtPrice) : product.compareAtPrice)
+          : null;
+
+        const hasDiscount = compareAtPriceNum && compareAtPriceNum > priceNum;
         const discountPercentage = hasDiscount
           ? Math.round(
-              ((product.compareAtPrice! - product.price) /
-                product.compareAtPrice!) *
-                100
+              ((compareAtPriceNum! - priceNum) / compareAtPriceNum!) * 100
             )
           : 0;
 

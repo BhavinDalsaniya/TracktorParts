@@ -65,6 +65,7 @@ export default function AdminDashboard() {
   };
 
   const menuItems = [
+    { id: 'categories', label: 'Categories', icon: '🏷️', path: '/admin/categories' },
     { id: 'products', label: 'Products', icon: '📦', path: '/admin/products' },
     { id: 'orders', label: 'Orders', icon: '📋', path: '/admin/orders' },
     { id: 'users', label: 'Users', icon: '👥', path: '/admin/users' },

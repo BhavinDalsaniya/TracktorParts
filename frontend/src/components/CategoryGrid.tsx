@@ -30,7 +30,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         >
           <div
             className={cn(
-              'flex h-16 w-16 items-center justify-center rounded-2xl',
+              'relative h-20 w-20 overflow-hidden rounded-2xl',
               'bg-gradient-to-br from-primary-400 to-primary-600',
               'shadow-sm shadow-primary-200'
             )}
@@ -38,18 +38,20 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
             {category.image ? (
               <Image
                 src={category.image}
-                alt={category.nameGu}
-                width={48}
-                height={48}
-                className="h-12 w-12 rounded-xl object-cover"
+                alt={category.nameGu || category.name}
+                fill
+                sizes="80px"
+                className="object-cover"
               />
             ) : (
-              <span className="text-2xl">
-                {category.nameGu?.charAt(0) || category.name?.charAt(0) || '?'}
-              </span>
+              <div className="flex h-full w-full items-center justify-center">
+                <span className="text-3xl font-bold text-white/80">
+                  {category.nameGu?.charAt(0) || category.name?.charAt(0) || '?'}
+                </span>
+              </div>
             )}
           </div>
-          <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+          <span className="text-xs font-medium text-gray-700 text-center leading-tight line-clamp-2">
             {category.nameGu || category.name}
           </span>
         </Link>

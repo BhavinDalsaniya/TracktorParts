@@ -72,17 +72,18 @@ async function generateThumbnail(buffer: Buffer): Promise<Buffer> {
 async function storeImage(
   buffer: Buffer,
   filename: string,
-  productId: string
+  productId: string,
+  folder: string = 'products'
 ): Promise<string> {
   // Create uploads directory if not exists
-  const uploadDir = path.join(process.cwd(), 'uploads', 'products', productId);
+  const uploadDir = path.join(process.cwd(), 'uploads', folder, productId);
   await fs.mkdir(uploadDir, { recursive: true });
 
   const filepath = path.join(uploadDir, filename);
   await fs.writeFile(filepath, buffer);
 
   // Return URL (in production, return CDN URL)
-  return `/uploads/products/${productId}/${filename}`;
+  return `/uploads/${folder}/${productId}/${filename}`;
 }
 
 /**
@@ -90,7 +91,8 @@ async function storeImage(
  */
 export async function compressAndStoreImages(
   files: Express.Multer.File[],
-  productId: string
+  productId: string,
+  folder: string = 'products'
 ): Promise<string[]> {
   const urls: string[] = [];
 
@@ -105,7 +107,7 @@ export async function compressAndStoreImages(
       const filename = `img_${Date.now()}_${i}.webp`;
 
       // Store image
-      const url = await storeImage(compressed, filename, productId);
+      const url = await storeImage(compressed, filename, productId, folder);
       urls.push(url);
 
       logger.info(`Image compressed: ${file.originalname} -> ${filename}`);

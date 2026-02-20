@@ -19,13 +19,13 @@ interface ProductsResponse {
 async function getHomePageData() {
   try {
     const [categoriesRes, productsRes] = await Promise.all([
-      api.get<CategoriesResponse>('/api/categories').catch((): CategoriesResponse => ({ categories: [] })),
-      api.get<ProductsResponse>('/api/products', { page: 1, limit: 10, sort: 'popular' }).catch((): ProductsResponse => ({ products: [] })),
+      api.get<{ success: boolean; data: Category[] }>('/api/categories').catch((): { success: boolean; data: Category[] } => ({ success: false, data: [] })),
+      api.get<{ success: boolean; data: { products: Product[] } }>('/api/products', { limit: 1000 }).catch((): { success: boolean; data: { products: Product[] } } => ({ success: false, data: { products: [] } })),
     ]);
 
     return {
-      categories: categoriesRes.categories || [],
-      products: productsRes.products || [],
+      categories: categoriesRes.data || [],
+      products: productsRes.data?.products || [],
     };
   } catch (error) {
     return {

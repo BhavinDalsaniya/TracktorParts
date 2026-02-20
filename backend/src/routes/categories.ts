@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { asyncHandler, ApiError } from '@/middleware/errorHandler';
 import { authenticate, requireRole } from '@/middleware/auth';
+import { multerUpload } from '@/services/imageUpload';
 import { prisma } from '@/config/database';
 import { apiRateLimit } from '@/middleware/rateLimiter';
 
@@ -103,14 +104,15 @@ router.post(
     const schema = z.object({
       name: z.string().min(1),
       nameGu: z.string().min(1),
-      slug: z.string().regex(/^[a-z0-9-]+$/),
+      slug: z.string().min(1).regex(/^[a-z0-9-]+$/),
       description: z.string().optional(),
       descriptionGu: z.string().optional(),
-      image: z.string().optional(),
+      image: z.string().nullable().optional(),
       icon: z.string().optional(),
       parentId: z.string().optional(),
-      displayOrder: z.number().int().default(0),
-      featured: z.boolean().default(false),
+      displayOrder: z.coerce.number().int().default(0),
+      featured: z.coerce.boolean().default(false),
+      isActive: z.coerce.boolean().default(true),
     });
 
     const data = schema.parse(req.body);
@@ -125,7 +127,17 @@ router.post(
     }
 
     const category = await prisma.category.create({
-      data,
+      data: {
+        name: data.name,
+        nameGu: data.nameGu,
+        slug: data.slug,
+        description: data.description || null,
+        descriptionGu: data.descriptionGu || null,
+        image: data.image || null,
+        displayOrder: data.displayOrder,
+        featured: data.featured,
+        isActive: data.isActive,
+      },
     });
 
     res.status(201).json({
@@ -149,22 +161,32 @@ router.put(
     const schema = z.object({
       name: z.string().min(1).optional(),
       nameGu: z.string().min(1).optional(),
-      slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+      slug: z.string().min(1).regex(/^[a-z0-9-]+$/).optional(),
       description: z.string().optional(),
       descriptionGu: z.string().optional(),
-      image: z.string().optional(),
+      image: z.string().nullable().optional(),
       icon: z.string().optional(),
       parentId: z.string().optional(),
-      displayOrder: z.number().int().optional(),
-      featured: z.boolean().optional(),
-      isActive: z.boolean().optional(),
+      displayOrder: z.coerce.number().int().optional(),
+      featured: z.coerce.boolean().optional(),
+      isActive: z.coerce.boolean().optional(),
     });
 
     const data = schema.parse(req.body);
 
     const category = await prisma.category.update({
       where: { id: req.params.id },
-      data,
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.nameGu !== undefined && { nameGu: data.nameGu }),
+        ...(data.slug !== undefined && { slug: data.slug }),
+        ...(data.description !== undefined && { description: data.description || null }),
+        ...(data.descriptionGu !== undefined && { descriptionGu: data.descriptionGu || null }),
+        ...(data.image !== undefined && { image: data.image }),
+        ...(data.displayOrder !== undefined && { displayOrder: data.displayOrder }),
+        ...(data.featured !== undefined && { featured: data.featured }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+      },
     });
 
     res.json({
@@ -192,6 +214,82 @@ router.delete(
     res.json({
       success: true,
       message: 'શ્રેણી કાઢી નાખવામાં આવી',
+    });
+  })
+);
+
+/**
+ * @route   POST /api/categories/upload-image
+ * @desc    Upload category image (Admin only)
+ * @access  Admin
+ */
+router.post(
+  '/upload-image',
+  authenticate,
+  requireRole('ADMIN'),
+  multerUpload.single('image'),
+  asyncHandler(async (req, res) => {
+    const file = req.file as Express.Multer.File;
+    if (!file) {
+      throw new ApiError(400, 'છબી જરૂરી છે');
+    }
+
+    const { compressAndStoreImages } = await import('@/services/imageUpload');
+    const urls = await compressAndStoreImages([file], 'temp', 'categories');
+
+    res.json({
+      success: true,
+      data: {
+        image: urls[0],
+      },
+    });
+  })
+);
+
+/**
+ * @route   GET /api/categories/admin/all
+ * @desc    Get all categories including inactive (Admin only)
+ * @access  Admin
+ */
+router.get(
+  '/admin/all',
+  authenticate,
+  requireRole('ADMIN'),
+  asyncHandler(async (req, res) => {
+    const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        nameGu: true,
+        slug: true,
+        description: true,
+        descriptionGu: true,
+        image: true,
+        icon: true,
+        parentId: true,
+        displayOrder: true,
+        featured: true,
+        isActive: true,
+        parent: {
+          select: {
+            id: true,
+            name: true,
+            nameGu: true,
+          },
+        },
+        _count: {
+          select: {
+            products: true,
+            children: true,
+          },
+        },
+      },
+      orderBy: { displayOrder: 'asc' },
+    });
+
+    res.json({
+      success: true,
+      data: categories,
     });
   })
 );

@@ -10,7 +10,7 @@ export const config = {
     supportedLocales: (process.env.NEXT_PUBLIC_SUPPORTED_LOCALES || 'gu,en,hi').split(','),
   },
   api: {
-    url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+    url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
     timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10),
   },
   features: {
